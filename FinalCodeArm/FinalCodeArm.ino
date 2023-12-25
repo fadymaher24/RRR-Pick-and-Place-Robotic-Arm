@@ -1,12 +1,10 @@
-
-fady 
 // Base height
 #include <math.h>
 #include <Servo.h>
 // RemoteXY select connection mode and include library 
 #define REMOTEXY_MODE__SOFTSERIAL
 #include <SoftwareSerial.h>
-#include <RemoteXY.h>
+#include <RemoteXY.h> 
 #include <Keypad.h>
 // RemoteXY connection settings 
 #define REMOTEXY_SERIAL_RX 52
