@@ -36,9 +36,9 @@ Needed Components:
 4. Upload control software to your microcontroller.
 5. Power up the robotic arm and start pick and place tasks.
 
-// ## Contributions
+## Contributions
 
-// 🚀 Contributions welcome! Follow the guidelines in `CONTRIBUTING.md`.
+ 🚀 Contributions welcome! Follow the guidelines in `CONTRIBUTING.md`.
 
 ## License
 
