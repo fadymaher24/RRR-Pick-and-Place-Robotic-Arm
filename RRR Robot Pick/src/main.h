@@ -21,6 +21,8 @@ byte rowPins[ROWS] = {12, 11, 10, 9};
 byte colPins[COLS] = {8,7,6};
 
 
+int IRSensor = A0; // connect ir sensor module to Arduino pin 9
+
 
 // RemoteXY configurate  
 #pragma pack(push, 1)
@@ -35,11 +37,22 @@ Servo servo2;
 Servo servo3;
 Servo servo4;
 
-void forwardKinematics(float theta1, float theta2, float theta3, float &x, float &y, float &z);
-void inverseKinematics(float x, float y, float z, float &theta1, float &theta2, float &theta3);
+
+// init theta values
+u8 theta1 = 0;
+u8 theta2 = 0;
+u8 theta3 = 0;
+
+
+
+void forwardKinematics(u8 theta1, u8 theta2, u8 theta3, u8 &x, u8 &y, u8 &z);
+void inverseKinematics(float x, float y, float z, u8 &theta1, u8 &theta2, u8 &theta3);
+void initial_position(void);
+void move_to_box(u8 theta1, u8 theta2, u8 theta3);
 void grab(void);
 void release(void);
 void pick(float xi, float yi, float zi, float xf, float yf, float zf);
+void go(u8 &theta1, u8 &theta2, u8 &theta3);
 void setup(void);
 void loop(void);
 #endif
