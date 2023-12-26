@@ -10,6 +10,7 @@
 #define REMOTEXY_SERIAL_RX 52
 #define REMOTEXY_SERIAL_TX 53
 #define REMOTEXY_SERIAL_SPEED 9600
+int irPin = A0;
 bool controlState = 0;
 const byte ROWS = 4; 
 const byte COLS = 3; 
@@ -58,10 +59,49 @@ Servo servo3;
 Servo servo4;
 
 void forwardKinematics(float theta1, float theta2, float theta3, float &x, float &y, float &z) {
-  x = l1 * cos(theta1) + l2 * cos(theta1 + theta2) + theta3;
-  y = l1 * sin(theta1) + l2 * sin(theta1 + theta2);
-  z = base_height;  // Base height
+  // Transformation matrices
+  float T1[4][4] = {
+    {cos(theta1), -sin(theta1), 0, 0},
+    {sin(theta1), cos(theta1), 0, 0},
+    {0, 0, 1, 0},
+    {0, 0, 0, 1}
+  };
+
+  float T2[4][4] = {
+    {1, 0, 0, 2},
+    {0, 1, 0, 0},
+    {0, 0, 1, 0},
+    {0, 0, 0, 1}
+  };
+
+  float T3[4][4] = {
+    {1, 0, 0, 12},
+    {0, 1, 0, 0},
+    {0, 0, 1, 0},
+    {0, 0, 0, 1}
+  };
+
+  // Compute end-effector position
+  float end_effector[4][1] = { {0}, {0}, {0}, {1} };
+  float temp[4][1];
+
+  // Multiply T1 with end_effector
+  matrixMultiply(T1, end_effector, temp);
+  // Multiply T2 with temp to get new end_effector
+  matrixMultiply(T2, temp, end_effector);
+  // Multiply T3 with end_effector to get final position
+  matrixMultiply(T3, end_effector, temp);
+
+  x = temp[0][0];
+  y = temp[1][0];
+  z = temp[2][0]; // Add base height
 }
+
+// Define matrix multiplication function (simplified for 4x4 matrices)
+void matrixMultiply(float A[][4], float B[][1], float result[][1]) {
+  // Compute matrix multiplication and store result in 'result' matrix
+}
+
 
 void inverseKinematics(float x, float y, float z, float &theta1, float &theta2, float &theta3) {
   theta3 = z - base_height;  // Third link is directly related to z
@@ -80,11 +120,12 @@ void grab() {
 }
 
 void release() {
-  servo4.write(135);  // Set gripper to open position
+  servo4.write(50);  // Set gripper to open position
 }
 
 void pick(float xi, float yi, float zi, float xf, float yf, float zf) {
   // Initial Position
+  
   float theta1_i, theta2_i, theta3_i;
   inverseKinematics(xi, yi, zi, theta1_i, theta2_i, theta3_i);
   
@@ -93,21 +134,29 @@ void pick(float xi, float yi, float zi, float xf, float yf, float zf) {
   inverseKinematics(xf, yf, zf, theta1_f, theta2_f, theta3_f);
   
   // Set initial position
-  servo1.write(theta1_i * 180.0 / M_PI);
-  servo2.write(theta2_i * 180.0 / M_PI);
-  servo3.write(theta3_i * 180.0 / M_PI);
-  delay(1000);
+  servo1.write(theta1_i);
+  delay(500);
+  servo2.write(theta2_i);
+  delay(500);
+  servo3.write(theta3_i);
+  delay(1500);
  // Grab object
+  if (irValue >110){
   grab();
   delay(2000);  // Wait for 2 seconds
-
   // Set final position
-  servo1.write(theta1_f * 180.0 / M_PI);
-  servo2.write(theta2_f * 180.0 / M_PI);
-  servo3.write(theta3_f * 180.0 / M_PI);
-
+  servo1.write(theta1_f);
+  delay(500);
+  servo2.write(theta2_f);
+  delay(500);
+  servo3.write(theta3_f);
+  delay(1500);
   // Release object
   release();
+  }else{
+    return
+  }
+
 }
 
 void setup() {
@@ -128,6 +177,7 @@ void setup() {
 
 void loop() {
   // Loop can remain empty as our operations are done in the pick function
+  irValue = analogRead(irPin);
   RemoteXY_Handler ();
    char key = keypad.getKey();
   if (key) {
@@ -140,8 +190,11 @@ void loop() {
  if (controlState == 1) {
    //CONTROL STATE = 1
     float theta1 = map(RemoteXY.Base_slider, 0, 100, 0, 180);
+    delay(500);
     float theta2 = map(RemoteXY.Arm1_slider, 0, 100, 0, 180);
+    delay(500);
     float theta3 = map(RemoteXY.Arm2_slider, 0, 100, 0, 180);
+    delay(500);
     if (RemoteXY.gripper_button == 1) {
       grab();
     } else {
@@ -161,11 +214,11 @@ void loop() {
 
   } else {
    //CONTROL STATE = 0 
-    servo1.write(0);
-    servo2.write(45);
-    servo3.write(0);
-    grab();
 
+  servo1.write(0);
+  servo2.write(90);
+  servo3.write(90);
+  servo4.write(50);
     // If controlState is not 1, do nothing
     // Optionally, you can add some code here if you want to do something specific when controlState is 0
   }
