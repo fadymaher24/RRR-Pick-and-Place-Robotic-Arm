@@ -6,6 +6,7 @@
 #include <SoftwareSerial.h>
 #include <RemoteXY.h> 
 #include <Keypad.h>
+
 #include <main.h>
 
 
@@ -62,11 +63,11 @@ void initial_position() {
 // go to position with theta values
 void go(u8 &theta1, u8 &theta2, u8 &theta3) {
   servo1.write(theta1);
-  delay(500);
+  delay(400);
   servo2.write(theta2);
-  delay(500);
+  delay(400);
   servo3.write(theta3);
-  delay(500);
+  delay(400);
 
 }
 void move_to_box(u8 theta1, u8 theta2, u8 theta3) {
@@ -78,9 +79,7 @@ void grab() {
   if(IRSensor > 150){
     // Set gripper to closed position
     servo4.write(0);
-    move_to_box(theta1, theta2, theta3);
-    release();
-    initial_position();
+    move_to_box(theta1,theta2,theta3);
   }else{
     initial_position();
   }
@@ -92,9 +91,11 @@ void release() {
 
 
 void pick(float xi, float yi, float zi) {
+  initial_position();
   inverseKinematics(xi, yi, zi, theta1, theta2, theta3);
   go(theta1, theta2, theta3);
   grab();
+
 }
 
 void setup() {
@@ -125,26 +126,27 @@ void loop() {
     float theta2 = map(RemoteXY.Arm1_slider, 0, 100, 0, 180);
     float theta3 = map(RemoteXY.Arm2_slider, 0, 100, 0, 180);
     if (RemoteXY.gripper_button == 1) {
-      servo4.write(0);
+      grab();
+    } else {
+      release();
+    
+    }
+
+    servo1.write(theta1);
+    servo2.write(theta2);
+    servo3.write(theta3);
+    
+    if (RemoteXY.gripper_button == 1) {
+      grab();
     } else {
       release();
     }
-    servo1.write(theta1);
-    delay(200);
-    servo2.write(theta2);
-    delay(200);
-    servo3.write(theta3);
-    delay(200);
-    
-
 
   } else {
    //CONTROL STATE = 0 
-  initial_position();
-  pick(5,5,5);
-  pick(15,15,15);
+    initial_position();
+    grab();
   }
   
 }
-
 
